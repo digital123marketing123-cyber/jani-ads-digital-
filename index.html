@@ -1,0 +1,1138 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JK Arabian Shawarma - Billing & Token POS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                            700: '#a16207',
+                        },
+                        darkbg: '#09090b',
+                        cardbg: '#121215',
+                        panelbg: '#18181c'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        serif: ['Cinzel', 'Georgia', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #eab308;
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+        }
+        
+        .gold-border-glow {
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+        }
+
+        .gold-text-gradient {
+            background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Active Navigation Tab styling */
+        .nav-tab.active {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: #000;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3);
+        }
+
+        /* Receipt Thermal Printing Styles */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #printableTokenSlip, #printableTokenSlip * {
+                visibility: visible !important;
+            }
+            #printableTokenSlip {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                background: white !important;
+                color: black !important;
+                padding: 10px;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 12px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-darkbg text-zinc-100 overflow-x-hidden antialiased pb-20 lg:pb-0">
+
+    <!-- TOP DEVELOPER BRANDING BANNER (JANI ADS CREDIT) -->
+    <div class="bg-gradient-to-r from-zinc-950 via-amber-950/60 to-zinc-950 border-b border-amber-500/30 py-2.5 px-3 text-center text-xs sm:text-sm font-semibold tracking-wider text-amber-300 flex items-center justify-center gap-2 shadow-xl z-50">
+        <i class="fa-solid fa-crown text-amber-400 animate-pulse text-xs"></i>
+        <span>DESIGNED AND DEVELOPED BY <span class="font-extrabold text-amber-400 tracking-widest underline decoration-amber-500/60 underline-offset-4">JANI ADS</span></span>
+        <i class="fa-solid fa-crown text-amber-400 animate-pulse text-xs"></i>
+    </div>
+
+    <!-- MAIN APPLICATION NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-cardbg/95 backdrop-blur-md border-b border-zinc-800/80 px-3 sm:px-4 py-2.5 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3">
+            
+            <!-- Restaurant Logo & Name Header -->
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start" onclick="switchTab('pos')">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center text-black font-black text-xl shadow-lg gold-glow border border-amber-300">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <h1 class="font-serif text-base sm:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                                <span class="gold-text-gradient">JK ARABIAN SHAWARMA</span>
+                            </h1>
+                            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider flex items-center gap-1">
+                                HALAL
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                            <span class="text-amber-400 font-medium">& Grill House</span>
+                            <span>•</span>
+                            <span id="liveClock" class="font-mono text-zinc-300"><i class="fa-regular fa-clock mr-1 text-amber-400"></i>00:00:00</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Actions -->
+            <div class="flex items-center gap-1.5 w-full sm:w-auto justify-stretch sm:justify-end overflow-x-auto pb-0.5 sm:pb-0">
+                <button onclick="switchTab('pos')" id="tabBtnPos" class="nav-tab active flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-cash-register"></i> Menu & Billing
+                </button>
+                <button onclick="switchTab('history')" id="tabBtnHistory" class="nav-tab flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-all border border-zinc-700/50">
+                    <i class="fa-solid fa-receipt"></i> Tokens <span id="todayOrderBadge" class="ml-1 px-1.5 py-0.2 bg-amber-500 text-black text-[10px] font-black rounded-full">0</span>
+                </button>
+                <button onclick="switchTab('reports')" id="tabBtnReports" class="nav-tab flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-all border border-zinc-700/50">
+                    <i class="fa-solid fa-calculator text-amber-400"></i> Settlement
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2.5 sm:p-5 flex flex-col">
+
+        <!-- ================= PAGE 1: POS MENU & BILLING ENGINE ================= -->
+        <div id="viewPos" class="app-tab flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+            
+            <!-- LEFT SECTION: CATEGORIES & TOUCH MENU CARDS (7-8 Cols) -->
+            <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 sm:gap-4">
+                
+                <!-- Category Filter Bar & Search -->
+                <div class="bg-cardbg rounded-2xl p-3 border border-zinc-800/80 shadow-xl flex flex-col gap-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+                            <input type="text" id="menuSearchInput" oninput="filterMenuItems()" placeholder="Search Shawarma, Grill, Rumali..." class="w-full bg-zinc-900 border border-zinc-700/70 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition-all">
+                        </div>
+                        <div class="text-[11px] text-amber-400 font-medium px-2 py-1.5 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center gap-1 shrink-0">
+                            <i class="fa-solid fa-touch-app text-xs animate-bounce"></i> Touch Item
+                        </div>
+                    </div>
+
+                    <!-- Category Pills -->
+                    <div id="categoryContainer" class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Touch Menu Items Grid (Responsive 1-col on tiny screens, 2-col on mobiles, 3-col on desktop) -->
+                <div id="menuItemsGrid" class="grid grid-cols-1 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-2.5 sm:gap-3.5 overflow-y-auto max-h-[calc(100vh-230px)] pr-1">
+                    <!-- Cards populated dynamically -->
+                </div>
+            </div>
+
+            <!-- RIGHT SECTION: LIVE TOKEN BILLING BASKET (4-5 Cols) -->
+            <div id="billingCartSection" class="lg:col-span-5 xl:col-span-4 flex flex-col h-full">
+                <div class="bg-cardbg border border-zinc-800/90 rounded-2xl p-3.5 sm:p-4 shadow-2xl flex flex-col h-full sticky top-20">
+                    
+                    <!-- Token Header Header Info -->
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            <h2 class="font-serif text-sm sm:text-base font-extrabold text-white tracking-wide">TOKEN BILL BASKET</h2>
+                        </div>
+                        <span id="nextSerialBadge" class="bg-gradient-to-r from-amber-500 to-amber-600 text-black font-mono font-black text-xs px-2.5 py-1 rounded-lg shadow">
+                            TOKEN #001
+                        </span>
+                    </div>
+
+                    <!-- Order Type & Customer Details Inputs -->
+                    <div class="py-2.5 border-b border-zinc-800/80 space-y-2">
+                        <!-- Order Type Buttons -->
+                        <div class="grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-center">
+                            <button onclick="setOrderType('Dine-In')" id="typeDineIn" class="order-type-btn active text-xs font-bold py-1.5 rounded-lg bg-amber-500 text-black transition-all">Dine-In</button>
+                            <button onclick="setOrderType('Takeaway')" id="typeTakeaway" class="order-type-btn text-xs font-bold py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">Takeaway</button>
+                            <button onclick="setOrderType('Delivery')" id="typeDelivery" class="order-type-btn text-xs font-bold py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">Delivery</button>
+                        </div>
+
+                        <!-- Table & Mobile Input -->
+                        <div class="grid grid-cols-12 gap-2">
+                            <div class="col-span-4" id="tableNumContainer">
+                                <input type="text" id="custTable" placeholder="Table #" class="w-full bg-zinc-900 border border-zinc-700/60 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div class="col-span-8 flex-1">
+                                <div class="relative">
+                                    <i class="fa-brands fa-whatsapp absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-400 text-sm"></i>
+                                    <input type="tel" id="custPhone" placeholder="Mobile (WhatsApp)" class="w-full bg-zinc-900 border border-zinc-700/60 rounded-xl pl-8 pr-2 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 font-mono">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Item List -->
+                    <div id="cartItemsContainer" class="flex-1 overflow-y-auto min-h-[160px] max-h-[260px] py-2 space-y-2 pr-1 border-b border-zinc-800">
+                        <!-- Cart Items dynamically populated -->
+                    </div>
+
+                    <!-- Pricing Summary -->
+                    <div class="pt-2.5 space-y-1">
+                        <div class="flex justify-between text-xs text-zinc-400">
+                            <span>Subtotal</span>
+                            <span id="cartSubtotal" class="font-mono text-white">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-zinc-400 items-center">
+                            <span>Discount</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-zinc-500 text-xs">₹</span>
+                                <input type="number" id="cartDiscount" value="0" min="0" oninput="renderCart()" class="w-16 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-right text-xs text-amber-400 focus:outline-none font-mono">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center text-sm font-bold pt-1.5 border-t border-zinc-800 text-white">
+                            <span>TOTAL PAYABLE</span>
+                            <span id="cartTotal" class="text-xl sm:text-2xl font-mono text-amber-400 font-black">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-12 gap-2 pt-2.5">
+                        <button onclick="clearCart()" class="col-span-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-rose-400 rounded-xl font-bold text-xs transition-all border border-zinc-700/50 flex flex-col items-center justify-center gap-0.5">
+                            <i class="fa-solid fa-trash-can text-xs"></i> Clear
+                        </button>
+                        <button onclick="processOrderAndGenerateToken()" class="col-span-9 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold rounded-xl text-xs sm:text-sm shadow-xl transition-all gold-glow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-print text-sm"></i> GENERATE TOKEN & BILL
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PAGE 2: TODAY'S ISSUED TOKENS ================= -->
+        <div id="viewHistory" class="app-tab hidden space-y-4">
+            <div class="bg-cardbg rounded-2xl p-3.5 border border-zinc-800 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="font-serif text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-amber-400"></i> Today's Issued Tokens
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Manage orders, re-print slip, or send WhatsApp invoices</p>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+                    <input type="text" id="historySearch" oninput="renderHistoryTable()" placeholder="Search Token # or Mobile..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <!-- Tokens Table -->
+            <div class="bg-cardbg rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-zinc-900/90 text-zinc-400 uppercase font-mono text-[11px] border-b border-zinc-800">
+                            <tr>
+                                <th class="p-3">Token #</th>
+                                <th class="p-3">Time</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Customer / Mobile</th>
+                                <th class="p-3">Items Purchased</th>
+                                <th class="p-3">Total Bill</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-zinc-800/60 text-zinc-300">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: DAILY SETTLEMENT & CLOSING REPORT ================= -->
+        <div id="viewReports" class="app-tab hidden space-y-5">
+            
+            <!-- Settlement Header & Actions -->
+            <div class="bg-cardbg rounded-2xl p-4 border border-zinc-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div>
+                    <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest font-mono">End of Day Reporting</span>
+                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-white flex items-center gap-2 mt-0.5">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> Daily Sales & Category Settlement
+                    </h2>
+                    <p id="settlementDateSubtitle" class="text-xs text-zinc-400 mt-0.5">Generated report for today</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onclick="exportSettlementReportCSV()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </button>
+                    <button onclick="triggerPrintSettlement()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border border-zinc-700">
+                        <i class="fa-solid fa-print"></i> Print Settlement
+                    </button>
+                    <button onclick="confirmResetDay()" class="px-3 py-2 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-power-off"></i> Close Day & Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Stats KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="bg-cardbg border border-zinc-800/80 rounded-2xl p-3.5 shadow-xl flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg border border-amber-500/20 shrink-0">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-zinc-400 font-medium">Total Daily Sales</p>
+                        <h3 id="statTotalRevenue" class="text-lg sm:text-2xl font-bold font-mono text-white mt-0.5">₹0.00</h3>
+                    </div>
+                </div>
+
+                <div class="bg-cardbg border border-zinc-800/80 rounded-2xl p-3.5 shadow-xl flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg border border-emerald-500/20 shrink-0">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-zinc-400 font-medium">Tokens Issued</p>
+                        <h3 id="statTotalTokens" class="text-lg sm:text-2xl font-bold font-mono text-white mt-0.5">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-cardbg border border-zinc-800/80 rounded-2xl p-3.5 shadow-xl flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-zinc-400 font-medium">Average Bill</p>
+                        <h3 id="statAvgBill" class="text-lg sm:text-2xl font-bold font-mono text-white mt-0.5">₹0.00</h3>
+                    </div>
+                </div>
+
+                <div class="bg-cardbg border border-zinc-800/80 rounded-2xl p-3.5 shadow-xl flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg border border-purple-500/20 shrink-0">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-zinc-400 font-medium">Top Category</p>
+                        <h3 id="statTopCategory" class="text-xs sm:text-base font-bold text-amber-400 mt-0.5 truncate max-w-[110px] sm:max-w-[140px]">-</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category-Wise Settlement Table & Breakdown -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                
+                <!-- Category Breakdown Table (7 cols) -->
+                <div class="lg:col-span-7 bg-cardbg rounded-2xl border border-zinc-800 p-3.5 shadow-2xl flex flex-col gap-3">
+                    <h3 class="font-serif text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-amber-400"></i> Category Settlement Breakdown
+                    </h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-zinc-900 text-zinc-400 font-mono uppercase text-[10px] border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-2.5">Category Name</th>
+                                    <th class="p-2.5">Qty Sold</th>
+                                    <th class="p-2.5">Total Sales</th>
+                                    <th class="p-2.5 text-right">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categorySettlementBody" class="divide-y divide-zinc-800 text-zinc-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Product Wise Top Sellers List (5 cols) -->
+                <div class="lg:col-span-5 bg-cardbg rounded-2xl border border-zinc-800 p-3.5 shadow-2xl flex flex-col gap-3">
+                    <h3 class="font-serif text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-400"></i> Top Products Sold
+                    </h3>
+                    
+                    <div id="productSettlementList" class="space-y-2 overflow-y-auto max-h-[380px] pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MOBILE STICKY FLOATING CART QUICK BAR -->
+    <div id="mobileQuickBar" onclick="scrollToBillingCart()" class="lg:hidden fixed bottom-3 left-3 right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black p-3 rounded-2xl shadow-2xl flex items-center justify-between z-30 font-bold border border-amber-300 cursor-pointer transition-transform active:scale-98">
+        <div class="flex items-center gap-2 text-xs sm:text-sm">
+            <span class="w-7 h-7 rounded-lg bg-black text-amber-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </span>
+            <span><span id="mobileItemCount">0</span> Items in Token</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span id="mobileCartTotal" class="text-sm sm:text-base font-mono font-black">₹0.00</span>
+            <span class="bg-black text-amber-400 text-[10px] px-2 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                View Bill <i class="fa-solid fa-arrow-down text-[9px]"></i>
+            </span>
+        </div>
+    </div>
+
+    <!-- TOKEN INVOICE & PRINT PREVIEW MODAL -->
+    <div id="tokenModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+        <div class="bg-zinc-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl flex flex-col gap-3 max-h-[92vh] overflow-y-auto gold-border-glow">
+            
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                <div class="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                    <i class="fa-solid fa-receipt text-base"></i>
+                    <span>TOKEN INVOICE CREATED</span>
+                </div>
+                <button onclick="closeTokenModal()" class="text-zinc-400 hover:text-white text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Printable Slip Content -->
+            <div id="printableTokenSlip" class="bg-white text-black p-3.5 rounded-xl font-mono text-xs space-y-2 border border-zinc-300">
+                <div class="text-center pb-2 border-b border-dashed border-zinc-400 space-y-0.5">
+                    <h2 class="font-bold text-sm sm:text-base tracking-wider uppercase">JK ARABIAN SHAWARMA</h2>
+                    <p class="text-[10px] text-zinc-700">& GRILL HOUSE</p>
+                    <p class="text-[9px]">RTO Office Road, Siddhardha Nagar, Kakinada</p>
+                    <p class="text-[9px]">Ph: 86885 53379 | HALAL</p>
+                </div>
+
+                <div class="flex justify-between font-bold text-xs bg-zinc-100 p-1.5 rounded my-1 border border-zinc-300">
+                    <span>TOKEN NO: <span id="modalTokenSerial" class="text-sm font-black">#001</span></span>
+                    <span id="modalOrderType" class="uppercase">Dine-In</span>
+                </div>
+
+                <div class="text-[10px] space-y-0.5 border-b border-dashed border-zinc-400 pb-1.5">
+                    <div class="flex justify-between">
+                        <span>Date & Time:</span>
+                        <span id="modalTimestamp">28/09/2026, 10:30 PM</span>
+                    </div>
+                    <div class="flex justify-between" id="modalTableRow">
+                        <span>Table #:</span>
+                        <span id="modalTableNum">T-04</span>
+                    </div>
+                    <div class="flex justify-between" id="modalPhoneRow">
+                        <span>Customer Ph:</span>
+                        <span id="modalPhoneNum">9876543210</span>
+                    </div>
+                </div>
+
+                <!-- Items Purchased Table -->
+                <div class="py-1 border-b border-dashed border-zinc-400">
+                    <div class="flex justify-between font-bold text-[10px] border-b pb-1 mb-1">
+                        <span class="w-1/2">ITEM</span>
+                        <span class="w-1/4 text-center">QTY</span>
+                        <span class="w-1/4 text-right">AMT</span>
+                    </div>
+                    <div id="modalItemsList" class="space-y-1">
+                        <!-- Items rendered here -->
+                    </div>
+                </div>
+
+                <!-- Total Amount -->
+                <div class="space-y-0.5 pt-1 text-right">
+                    <div class="flex justify-between text-[10px]" id="modalDiscountRow">
+                        <span>Discount:</span>
+                        <span id="modalDiscount">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-bold border-t border-zinc-400 pt-1">
+                        <span>TOTAL PAYABLE:</span>
+                        <span id="modalTotalPayable" class="text-sm">₹0.00</span>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2 text-[8px] border-t border-dashed border-zinc-400 text-zinc-600 space-y-0.5">
+                    <p class="font-bold text-black">Thank you for dining with us!</p>
+                    <p>Designed & Developed by JANI ADS</p>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex flex-col gap-2 pt-1">
+                <button onclick="shareModalInvoiceWhatsApp()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all">
+                    <i class="fa-brands fa-whatsapp text-base"></i> Share Invoice via WhatsApp
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="printModalSlip()" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow transition-all">
+                        <i class="fa-solid fa-print"></i> Print Slip
+                    </button>
+                    <button onclick="closeTokenModal()" class="py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl border border-zinc-700 transition-all">
+                        Done & Next
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        const MENU_DATA = [
+            // VEG SHAWARMA
+            { id: 1, name: "Veg Lays Shawarma", price: 90, category: "Veg Shawarma", veg: true },
+            { id: 2, name: "Veg Paneer Shawarma", price: 110, category: "Veg Shawarma", veg: true },
+            { id: 3, name: "Veg Loaded Bag Shawarma", price: 130, category: "Veg Shawarma", veg: true },
+
+            // GRILLED CHICKEN
+            { id: 4, name: "Full Grill Chicken", price: 500, category: "Grilled Chicken", veg: false },
+            { id: 5, name: "Half Grill Chicken", price: 280, category: "Grilled Chicken", veg: false },
+
+            // CHICKEN SHAWARMA (WITH SALAD)
+            { id: 6, name: "Chicken Shawarma", price: 110, category: "Chicken Shawarma", veg: false },
+            { id: 7, name: "Peri Peri Chicken Shawarma", price: 130, category: "Chicken Shawarma", veg: false },
+            { id: 8, name: "Barbeque Chicken Shawarma", price: 130, category: "Chicken Shawarma", veg: false },
+            { id: 9, name: "Schezwan Chicken Shawarma", price: 140, category: "Chicken Shawarma", veg: false },
+            { id: 10, name: "Cheese Chicken Shawarma", price: 140, category: "Chicken Shawarma", veg: false },
+            { id: 11, name: "Kaju Chicken Shawarma", price: 140, category: "Chicken Shawarma", veg: false },
+            { id: 12, name: "Loaded Jumbo Shawarma", price: 170, category: "Chicken Shawarma", veg: false },
+            { id: 13, name: "Loaded Bowl Shawarma", price: 170, category: "Chicken Shawarma", veg: false },
+            { id: 14, name: "JK Special Shawarma", price: 180, category: "Chicken Shawarma", veg: false },
+            { id: 15, name: "Loaded Bag Shawarma", price: 190, category: "Chicken Shawarma", veg: false },
+            { id: 16, name: "JK Pot Shawarma", price: 190, category: "Chicken Shawarma", veg: false },
+
+            // SPECIAL CHICKEN SHAWARMA
+            { id: 17, name: "Special Chicken Shawarma", price: 150, category: "Special Shawarma", veg: false },
+            { id: 18, name: "Special Peri Peri Shawarma", price: 170, category: "Special Shawarma", veg: false },
+            { id: 19, name: "Special Schezwan Shawarma", price: 180, category: "Special Shawarma", veg: false },
+            { id: 20, name: "Special Cheese Shawarma", price: 180, category: "Special Shawarma", veg: false },
+            { id: 21, name: "Special Kaju Shawarma", price: 180, category: "Special Shawarma", veg: false },
+            { id: 22, name: "Special Loaded Jumbo", price: 220, category: "Special Shawarma", veg: false },
+
+            // BREADS & EXTRAS
+            { id: 23, name: "Rumali Roti", price: 25, category: "Breads & Extras", veg: true },
+            { id: 24, name: "Mayonnaise (Extra)", price: 20, category: "Breads & Extras", veg: true },
+            { id: 25, name: "Pudina Chutney (Extra)", price: 20, category: "Breads & Extras", veg: true }
+        ];
+
+        let cart = [];
+        let selectedCategory = "All";
+        let activeOrderType = "Dine-In";
+        let lastCreatedToken = null;
+
+        // Load today's token history from localStorage or init empty
+        let todayTokens = JSON.parse(localStorage.getItem("jk_shawarma_today_tokens")) || [];
+        let tokenCounter = parseInt(localStorage.getItem("jk_shawarma_token_counter")) || 1;
+
+        window.onload = function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            renderCategories();
+            renderMenuItems();
+            renderCart();
+            updateNextSerialBadge();
+            renderHistoryTable();
+            renderSettlementReport();
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerHTML = `<i class="fa-regular fa-clock mr-1 text-amber-400"></i>` + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.app-tab').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'pos') {
+                document.getElementById('viewPos').classList.remove('hidden');
+                document.getElementById('tabBtnPos').classList.add('active');
+            } else if (tabName === 'history') {
+                document.getElementById('viewHistory').classList.remove('hidden');
+                document.getElementById('tabBtnHistory').classList.add('active');
+                renderHistoryTable();
+            } else if (tabName === 'reports') {
+                document.getElementById('viewReports').classList.remove('hidden');
+                document.getElementById('tabBtnReports').classList.add('active');
+                renderSettlementReport();
+            }
+        }
+
+        function renderCategories() {
+            const categories = ["All", "Veg Shawarma", "Grilled Chicken", "Chicken Shawarma", "Special Shawarma", "Breads & Extras"];
+            const container = document.getElementById('categoryContainer');
+            
+            container.innerHTML = categories.map(cat => `
+                <button onclick="selectCategory('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat ? 'bg-amber-500 text-black border-amber-400 shadow-md font-extrabold' : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:text-white'}">
+                    ${cat === 'All' ? '<i class="fa-solid fa-utensils mr-1"></i>' : ''} ${cat}
+                </button>
+            `).join('');
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            renderCategories();
+            renderMenuItems();
+        }
+
+        function filterMenuItems() {
+            renderMenuItems();
+        }
+
+        function renderMenuItems() {
+            const searchVal = document.getElementById('menuSearchInput').value.toLowerCase().trim();
+            const grid = document.getElementById('menuItemsGrid');
+
+            const filtered = MENU_DATA.filter(item => {
+                const matchesCategory = (selectedCategory === "All") || (item.category === selectedCategory);
+                const matchesSearch = item.name.toLowerCase().includes(searchVal) || item.category.toLowerCase().includes(searchVal);
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-10 text-zinc-500">
+                        <i class="fa-solid fa-cookie-bite text-3xl mb-2 text-zinc-700"></i>
+                        <p class="text-xs font-medium">No dishes found matching search</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const inCart = cart.find(c => c.id === item.id);
+                const qty = inCart ? inCart.qty : 0;
+
+                return `
+                    <div class="group bg-cardbg hover:bg-zinc-900/90 border ${qty > 0 ? 'border-amber-500 bg-amber-500/5 gold-border-glow' : 'border-zinc-800/90'} rounded-2xl p-3 transition-all relative flex flex-col justify-between shadow-lg overflow-hidden">
+                        
+                        <!-- Top Metadata & Clear Price Badge -->
+                        <div>
+                            <div class="flex items-center justify-between gap-1.5 mb-2">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full border ${item.veg ? 'border-emerald-500 bg-emerald-500/30 text-emerald-400' : 'border-rose-500 bg-rose-500/30 text-rose-400'} shrink-0 flex items-center justify-center text-[6px]">
+                                        <i class="fa-solid fa-circle"></i>
+                                    </span>
+                                    <span class="text-[10px] font-bold uppercase text-zinc-400 tracking-wider truncate">${item.category}</span>
+                                </div>
+                                <span class="text-amber-400 font-mono font-black text-sm bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 shrink-0">₹${item.price}</span>
+                            </div>
+
+                            <!-- Dish Name (Full Legibility on Mobile) -->
+                            <h3 class="font-bold text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors leading-tight mb-3 break-words">${item.name}</h3>
+                        </div>
+
+                        <!-- Card Action Stepper Controls (Easy Add / Deselect) -->
+                        <div class="pt-2 border-t border-zinc-800/80">
+                            ${qty > 0 ? `
+                                <div class="flex items-center justify-between w-full bg-amber-500/20 border border-amber-500/40 rounded-xl p-1 text-amber-300">
+                                    <button onclick="event.stopPropagation(); updateCartQty(${item.id}, -1)" class="w-8 h-8 rounded-lg bg-zinc-900 hover:bg-rose-600 hover:text-white text-rose-400 flex items-center justify-center text-xs font-black transition-all active:scale-90 shadow" title="Deselect / Reduce">
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button>
+                                    <span class="font-mono font-black text-xs text-white px-2">${qty} in Bill</span>
+                                    <button onclick="event.stopPropagation(); addToCart(${item.id})" class="w-8 h-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-black flex items-center justify-center text-xs font-black transition-all active:scale-90 shadow" title="Add More">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <button onclick="addToCart(${item.id})" class="w-full py-2 px-3 rounded-xl bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-zinc-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all border border-zinc-700/60 active:scale-95 shadow">
+                                    <i class="fa-solid fa-plus text-[10px]"></i> Add to Bill
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setOrderType(type) {
+            activeOrderType = type;
+            document.querySelectorAll('.order-type-btn').forEach(btn => btn.classList.remove('active', 'bg-amber-500', 'text-black'));
+            
+            if (type === 'Dine-In') {
+                document.getElementById('typeDineIn').classList.add('active', 'bg-amber-500', 'text-black');
+                document.getElementById('tableNumContainer').style.display = 'block';
+            } else if (type === 'Takeaway') {
+                document.getElementById('typeTakeaway').classList.add('active', 'bg-amber-500', 'text-black');
+                document.getElementById('tableNumContainer').style.display = 'none';
+            } else if (type === 'Delivery') {
+                document.getElementById('typeDelivery').classList.add('active', 'bg-amber-500', 'text-black');
+                document.getElementById('tableNumContainer').style.display = 'none';
+            }
+        }
+
+        function addToCart(itemId) {
+            const item = MENU_DATA.find(m => m.id === itemId);
+            if (!item) return;
+
+            const existing = cart.find(c => c.id === itemId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...item, qty: 1 });
+            }
+
+            renderCart();
+            renderMenuItems();
+        }
+
+        function updateCartQty(itemId, delta) {
+            const existing = cart.find(c => c.id === itemId);
+            if (!existing) return;
+
+            existing.qty += delta;
+            if (existing.qty <= 0) {
+                cart = cart.filter(c => c.id !== itemId);
+            }
+
+            renderCart();
+            renderMenuItems();
+        }
+
+        function clearCart() {
+            cart = [];
+            document.getElementById('cartDiscount').value = 0;
+            renderCart();
+            renderMenuItems();
+        }
+
+        function scrollToBillingCart() {
+            document.getElementById('billingCartSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItemsContainer');
+
+            const totalItemQty = cart.reduce((acc, i) => acc + i.qty, 0);
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center text-zinc-500 py-8">
+                        <i class="fa-solid fa-utensils text-3xl mb-2 text-zinc-700"></i>
+                        <p class="text-xs font-medium">No dishes added to token</p>
+                        <p class="text-[10px] text-zinc-600 mt-0.5">Touch any dish on the menu card to add</p>
+                    </div>
+                `;
+                document.getElementById('cartSubtotal').innerText = '₹0.00';
+                document.getElementById('cartTotal').innerText = '₹0.00';
+
+                // Mobile Bar Update
+                document.getElementById('mobileItemCount').innerText = '0';
+                document.getElementById('mobileCartTotal').innerText = '₹0.00';
+                return;
+            }
+
+            let subtotal = 0;
+
+            container.innerHTML = cart.map(item => {
+                const itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+
+                return `
+                    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-bold text-white truncate">${item.name}</h4>
+                            <p class="text-[10px] text-zinc-400 font-mono">₹${item.price} x ${item.qty} = ₹${itemTotal}</p>
+                        </div>
+                        <div class="flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-lg p-0.5">
+                            <button onclick="updateCartQty(${item.id}, -1)" class="w-6 h-6 rounded bg-zinc-700 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition-colors" title="Deselect 1">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <span class="w-6 text-center font-mono font-bold text-xs text-amber-400">${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, 1)" class="w-6 h-6 rounded bg-zinc-700 hover:bg-emerald-600 text-white flex items-center justify-center text-xs transition-colors" title="Add 1">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const discount = parseFloat(document.getElementById('cartDiscount').value) || 0;
+            const finalTotal = Math.max(0, subtotal - discount);
+
+            document.getElementById('cartSubtotal').innerText = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('cartTotal').innerText = `₹${finalTotal.toFixed(2)}`;
+
+            // Mobile Floating Bar Update
+            document.getElementById('mobileItemCount').innerText = totalItemQty;
+            document.getElementById('mobileCartTotal').innerText = `₹${finalTotal.toFixed(2)}`;
+        }
+
+        function updateNextSerialBadge() {
+            const serialStr = `TOKEN #${String(tokenCounter).padStart(3, '0')}`;
+            document.getElementById('nextSerialBadge').innerText = serialStr;
+            document.getElementById('todayOrderBadge').innerText = todayTokens.length;
+        }
+
+        function processOrderAndGenerateToken() {
+            if (cart.length === 0) {
+                alert("Please touch and add at least one menu item to generate a token!");
+                return;
+            }
+
+            const phone = document.getElementById('custPhone').value.trim();
+            const table = document.getElementById('custTable').value.trim();
+            const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const discount = parseFloat(document.getElementById('cartDiscount').value) || 0;
+            const total = Math.max(0, subtotal - discount);
+
+            const tokenSerialStr = `#${String(tokenCounter).padStart(3, '0')}`;
+            const timeFormatted = new Date().toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' });
+
+            const orderObj = {
+                id: Date.now(),
+                serial: tokenSerialStr,
+                serialNum: tokenCounter,
+                timestamp: timeFormatted,
+                orderType: activeOrderType,
+                table: table || '-',
+                phone: phone || '-',
+                items: JSON.parse(JSON.stringify(cart)),
+                subtotal: subtotal,
+                discount: discount,
+                total: total
+            };
+
+            // Save to daily tokens
+            todayTokens.push(orderObj);
+            tokenCounter++;
+
+            localStorage.setItem("jk_shawarma_today_tokens", JSON.stringify(todayTokens));
+            localStorage.setItem("jk_shawarma_token_counter", tokenCounter.toString());
+
+            lastCreatedToken = orderObj;
+            updateNextSerialBadge();
+
+            // Populate Modal & Open
+            displayTokenModal(orderObj);
+
+            // Reset cart
+            clearCart();
+            document.getElementById('custPhone').value = '';
+            document.getElementById('custTable').value = '';
+        }
+
+        function displayTokenModal(token) {
+            document.getElementById('modalTokenSerial').innerText = token.serial;
+            document.getElementById('modalOrderType').innerText = token.orderType;
+            document.getElementById('modalTimestamp').innerText = token.timestamp;
+            
+            document.getElementById('modalTableNum').innerText = token.table;
+            document.getElementById('modalPhoneNum').innerText = token.phone;
+
+            const modalItems = document.getElementById('modalItemsList');
+            modalItems.innerHTML = token.items.map(item => `
+                <div class="flex justify-between text-[10px]">
+                    <span class="w-1/2 font-bold truncate">${item.name}</span>
+                    <span class="w-1/4 text-center">x${item.qty}</span>
+                    <span class="w-1/4 text-right">₹${item.price * item.qty}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('modalDiscount').innerText = `₹${token.discount.toFixed(2)}`;
+            document.getElementById('modalTotalPayable').innerText = `₹${token.total.toFixed(2)}`;
+
+            document.getElementById('tokenModal').classList.remove('hidden');
+        }
+
+        function closeTokenModal() {
+            document.getElementById('tokenModal').classList.add('hidden');
+        }
+
+        function printModalSlip() {
+            window.print();
+        }
+
+        function shareModalInvoiceWhatsApp() {
+            if (!lastCreatedToken) return;
+            shareTokenWhatsApp(lastCreatedToken);
+        }
+
+        function shareTokenWhatsApp(token) {
+            let phoneNum = token.phone.replace(/[^0-9]/g, '');
+            if (!phoneNum || phoneNum.length < 10) {
+                const promptPhone = prompt("Enter 10-digit WhatsApp phone number:", phoneNum || "");
+                if (!promptPhone) return;
+                phoneNum = promptPhone.replace(/[^0-9]/g, '');
+            }
+
+            if (phoneNum.length === 10) {
+                phoneNum = "91" + phoneNum;
+            }
+
+            let msg = `*JK ARABIAN SHAWARMA & GRILL HOUSE*\n`;
+            msg += `RTO Office Road, Siddhardha Nagar, Kakinada\n`;
+            msg += `--------------------------------------\n`;
+            msg += `*TOKEN INVOICE: ${token.serial}*\n`;
+            msg += `Date & Time: ${token.timestamp}\n`;
+            msg += `Order Type: ${token.orderType}\n`;
+            if (token.table && token.table !== '-') msg += `Table #: ${token.table}\n`;
+            msg += `--------------------------------------\n`;
+            msg += `*ITEMS ORDERED:*\n`;
+
+            token.items.forEach((item, index) => {
+                msg += `${index + 1}. ${item.name} x ${item.qty} = ₹${item.price * item.qty}\n`;
+            });
+
+            msg += `--------------------------------------\n`;
+            if (token.discount > 0) msg += `Discount: ₹${token.discount}\n`;
+            msg += `*TOTAL AMOUNT: ₹${token.total}*\n`;
+            msg += `--------------------------------------\n`;
+            msg += `Thank you for ordering with us!\n`;
+            msg += `_Designed by JANI ADS_`;
+
+            const url = `https://wa.me/${phoneNum}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        function renderHistoryTable() {
+            const searchVal = (document.getElementById('historySearch')?.value || '').toLowerCase();
+            const tbody = document.getElementById('historyTableBody');
+
+            const filtered = todayTokens.filter(t => 
+                t.serial.toLowerCase().includes(searchVal) || 
+                t.phone.toLowerCase().includes(searchVal)
+            ).reverse(); // latest first
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-zinc-500">
+                            No token records found for today.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(token => `
+                <tr class="hover:bg-zinc-900/50 transition-colors">
+                    <td class="p-3 font-mono font-bold text-amber-400">${token.serial}</td>
+                    <td class="p-3 text-zinc-400 font-mono text-xs">${token.timestamp}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${token.orderType === 'Dine-In' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-sky-500/10 text-sky-400 border border-sky-500/30'}">
+                            ${token.orderType}
+                        </span>
+                    </td>
+                    <td class="p-3 font-mono text-zinc-300">${token.phone} ${token.table !== '-' ? `<span class="text-zinc-500">(T-${token.table})</span>` : ''}</td>
+                    <td class="p-3 text-xs text-zinc-300">
+                        ${token.items.map(i => `${i.name} (${i.qty})`).join(', ')}
+                    </td>
+                    <td class="p-3 font-mono font-bold text-white">₹${token.total.toFixed(2)}</td>
+                    <td class="p-3 text-right space-x-1">
+                        <button onclick='reprintToken(${JSON.stringify(token)})' class="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-400 rounded-lg text-xs" title="View / Print">
+                            <i class="fa-solid fa-print"></i>
+                        </button>
+                        <button onclick='shareTokenWhatsApp(${JSON.stringify(token)})' class="p-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 rounded-lg text-xs" title="WhatsApp Share">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function reprintToken(token) {
+            lastCreatedToken = token;
+            displayTokenModal(token);
+        }
+
+        function renderSettlementReport() {
+            const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('settlementDateSubtitle').innerText = `Report generated for ${todayStr}`;
+
+            const totalTokensCount = todayTokens.length;
+            const totalRevenue = todayTokens.reduce((acc, t) => acc + t.total, 0);
+            const avgBill = totalTokensCount > 0 ? (totalRevenue / totalTokensCount) : 0;
+
+            document.getElementById('statTotalRevenue').innerText = `₹${totalRevenue.toFixed(2)}`;
+            document.getElementById('statTotalTokens').innerText = totalTokensCount;
+            document.getElementById('statAvgBill').innerText = `₹${avgBill.toFixed(2)}`;
+
+            // Calculate Category Wise Breakdown
+            const categoryStats = {
+                "Veg Shawarma": { qty: 0, revenue: 0 },
+                "Grilled Chicken": { qty: 0, revenue: 0 },
+                "Chicken Shawarma": { qty: 0, revenue: 0 },
+                "Special Shawarma": { qty: 0, revenue: 0 },
+                "Breads & Extras": { qty: 0, revenue: 0 }
+            };
+
+            const productStats = {};
+
+            todayTokens.forEach(token => {
+                token.items.forEach(item => {
+                    const cat = item.category || "Uncategorized";
+                    if (!categoryStats[cat]) {
+                        categoryStats[cat] = { qty: 0, revenue: 0 };
+                    }
+                    const itemRevenue = item.price * item.qty;
+                    categoryStats[cat].qty += item.qty;
+                    categoryStats[cat].revenue += itemRevenue;
+
+                    if (!productStats[item.name]) {
+                        productStats[item.name] = { qty: 0, revenue: 0, category: cat };
+                    }
+                    productStats[item.name].qty += item.qty;
+                    productStats[item.name].revenue += itemRevenue;
+                });
+            });
+
+            // Find Top Category
+            let topCatName = "-";
+            let maxCatRev = -1;
+            Object.keys(categoryStats).forEach(c => {
+                if (categoryStats[c].revenue > maxCatRev && categoryStats[c].revenue > 0) {
+                    maxCatRev = categoryStats[c].revenue;
+                    topCatName = c;
+                }
+            });
+            document.getElementById('statTopCategory').innerText = topCatName;
+
+            // Render Category Table
+            const catBody = document.getElementById('categorySettlementBody');
+            catBody.innerHTML = Object.keys(categoryStats).map(cat => {
+                const data = categoryStats[cat];
+                const sharePercent = totalRevenue > 0 ? ((data.revenue / totalRevenue) * 100).toFixed(1) : "0.0";
+
+                return `
+                    <tr class="hover:bg-zinc-900/50">
+                        <td class="p-2.5 font-bold text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> ${cat}
+                        </td>
+                        <td class="p-2.5 font-mono text-zinc-300">${data.qty} pcs</td>
+                        <td class="p-2.5 font-mono font-bold text-amber-400">₹${data.revenue.toFixed(2)}</td>
+                        <td class="p-2.5 text-right font-mono text-zinc-400">${sharePercent}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Render Top Products Performance List
+            const prodListContainer = document.getElementById('productSettlementList');
+            const sortedProds = Object.keys(productStats).map(p => ({
+                name: p,
+                ...productStats[p]
+            })).sort((a, b) => b.qty - a.qty);
+
+            if (sortedProds.length === 0) {
+                prodListContainer.innerHTML = `
+                    <p class="text-xs text-zinc-500 text-center py-6">No sales recorded today to generate product ranking.</p>
+                `;
+                return;
+            }
+
+            prodListContainer.innerHTML = sortedProds.map((p, idx) => `
+                <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold text-[10px] flex items-center justify-center">
+                            #${idx + 1}
+                        </span>
+                        <div>
+                            <h4 class="text-xs font-bold text-white leading-tight">${p.name}</h4>
+                            <span class="text-[9px] text-zinc-500">${p.category}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-amber-400 font-mono">${p.qty} Sold</span>
+                        <p class="text-[10px] text-zinc-400 font-mono">₹${p.revenue.toFixed(2)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportSettlementReportCSV() {
+            if (todayTokens.length === 0) {
+                alert("No token sales recorded today to export!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Token Serial,Timestamp,Order Type,Phone,Table,Subtotal,Discount,Total Payable\n";
+
+            todayTokens.forEach(t => {
+                csvContent += `"${t.serial}","${t.timestamp}","${t.orderType}","${t.phone}","${t.table}",${t.subtotal},${t.discount},${t.total}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `JK_Shawarma_Settlement_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function triggerPrintSettlement() {
+            window.print();
+        }
+
+        function confirmResetDay() {
+            if (confirm("Are you sure you want to close the day? This will reset the token serial counter back to #001 for tomorrow.")) {
+                todayTokens = [];
+                tokenCounter = 1;
+                localStorage.removeItem("jk_shawarma_today_tokens");
+                localStorage.setItem("jk_shawarma_token_counter", "1");
+                
+                updateNextSerialBadge();
+                renderHistoryTable();
+                renderSettlementReport();
+
+                alert("Day closed successfully. Token serial number reset to #001.");
+            }
+        }
+    </script>
+</body>
+</html>
